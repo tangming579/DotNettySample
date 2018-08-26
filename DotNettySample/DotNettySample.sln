@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2036
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NettyServer", "NettyServer\NettyServer.csproj", "{4A7A8FD3-0652-4D42-A2BB-5BF886012966}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NettyClient", "NettyClient\NettyClient.csproj", "{4041EA78-2A30-483E-8C72-B5B9D260A1EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonLib", "CommonLib\CommonLib.csproj", "{39D261EC-C058-4817-B735-755280AACFF7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4A7A8FD3-0652-4D42-A2BB-5BF886012966}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A7A8FD3-0652-4D42-A2BB-5BF886012966}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A7A8FD3-0652-4D42-A2BB-5BF886012966}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A7A8FD3-0652-4D42-A2BB-5BF886012966}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4041EA78-2A30-483E-8C72-B5B9D260A1EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4041EA78-2A30-483E-8C72-B5B9D260A1EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4041EA78-2A30-483E-8C72-B5B9D260A1EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4041EA78-2A30-483E-8C72-B5B9D260A1EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39D261EC-C058-4817-B735-755280AACFF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39D261EC-C058-4817-B735-755280AACFF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39D261EC-C058-4817-B735-755280AACFF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39D261EC-C058-4817-B735-755280AACFF7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {34374A35-708C-4C4F-9083-9E2F83E7C807}
+	EndGlobalSection
+EndGlobal
