@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using DotNetty.Buffers;
 
 namespace NettyServer
 {
@@ -13,18 +14,33 @@ namespace NettyServer
     {
         public override void ChannelActive(IChannelHandlerContext context)
         {
-            base.ChannelActive(context);
+            Console.WriteLine(@"--- Server is active ---");
+            IByteBuffer initialMessage = Unpooled.Buffer(256);
+            byte[] messageBytes = Encoding.UTF8.GetBytes(($"Hello Client"));
+            initialMessage.WriteBytes(messageBytes);
+            context.WriteAsync(messageBytes);
         }
 
         public override void ChannelInactive(IChannelHandlerContext context)
         {
-            base.ChannelInactive(context);
+            Console.WriteLine(@"--- Server is inactive ---");
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object msg)
         {
-            base.ChannelRead(context, msg);
+            var buffer = msg as IByteBuffer;
+            if (buffer != null)
+            {
+                Console.WriteLine(@"Received from client: " + buffer.ToString(Encoding.UTF8));
+            }
+
+            IByteBuffer initialMessage = Unpooled.Buffer(256);
+            byte[] messageBytes = Encoding.UTF8.GetBytes(($"I am Received {buffer.ToString(Encoding.UTF8)}"));
+            initialMessage.WriteBytes(messageBytes);
+            context.WriteAsync(messageBytes);
         }
+
+        public override void ChannelReadComplete(IChannelHandlerContext context) => context.Flush();
 
         public override void UserEventTriggered(IChannelHandlerContext context, object evt)
         {
@@ -33,7 +49,8 @@ namespace NettyServer
 
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
-            base.ExceptionCaught(context, exception);
+            Console.WriteLine("Server Exception: " + exception);
+            context.CloseAsync();
         }
 
         //处理心跳包

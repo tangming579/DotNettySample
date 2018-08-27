@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DotNetty.Buffers;
 
 namespace NettyClient
 {
@@ -28,7 +29,26 @@ namespace NettyClient
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            
+            Client.Instance.Send();
+        }
+
+        private void btnSendClear_Click(object sender, RoutedEventArgs e)
+        {
+            txbSend.Text = string.Empty;
+        }
+
+        private void btnSend_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Client.Instance.clientChannel.Active || !Client.Instance.clientChannel.IsWritable) return;
+            IByteBuffer initialMessage = Unpooled.Buffer(256);
+            byte[] messageBytes = Encoding.UTF8.GetBytes(txbSend.Text);
+            initialMessage.WriteBytes(messageBytes);
+            Client.Instance.clientChannel.WriteAndFlushAsync(initialMessage);
+        }
+
+        private void btnRecClear_Click(object sender, RoutedEventArgs e)
+        {
+            txbReceive.Text = String.Empty;
         }
     }
 }
