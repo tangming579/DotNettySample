@@ -41,10 +41,11 @@ namespace NettyServer
         private void btnSend_Click(object sender, RoutedEventArgs e)
         {
             if (!Server.Instance.boundChannel.Active || !Server.Instance.boundChannel.IsWritable) return;
+            if (ServerHandler.Current == null || ServerHandler.Current.Removed) return;
             IByteBuffer initialMessage = Unpooled.Buffer(256);
             byte[] messageBytes = Encoding.UTF8.GetBytes(txbSend.Text);
             initialMessage.WriteBytes(messageBytes);
-            Server.Instance.boundChannel.WriteAndFlushAsync(initialMessage);
+            ServerHandler.Current.WriteAndFlushAsync(initialMessage);
         }
 
         private void btnRecClear_Click(object sender, RoutedEventArgs e)

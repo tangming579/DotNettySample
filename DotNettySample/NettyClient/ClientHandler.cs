@@ -23,7 +23,7 @@ namespace NettyClient
         public override void ChannelActive(IChannelHandlerContext context)
         {
             Console.WriteLine(@"--- Client is active ---");
-            //context.WriteAndFlushAsync(this.initialMessage);
+            context.WriteAndFlushAsync(this.initialMessage);
         }
 
         public override void ChannelInactive(IChannelHandlerContext context)
@@ -38,7 +38,6 @@ namespace NettyClient
             {
                 Console.WriteLine("Received from server: " + byteBuffer.ToString(Encoding.UTF8));
             }
-
             //context.WriteAsync(msg);
         }
 

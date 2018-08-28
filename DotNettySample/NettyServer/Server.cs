@@ -48,7 +48,7 @@ namespace NettyServer
                 else
                 {
                     IPAddress ServerIP = IPAddress.Parse("127.0.0.1"); // 服务器地址
-                    int ServerPort = 8888; // 服务器端口
+                    int ServerPort = 8007; // 服务器端口
                     int Backlog = 100; // 最大连接等待数
 
                     // 线程池任务
@@ -73,7 +73,6 @@ namespace NettyServer
             RunServerAsync(Args).Wait();
         }
 
-        public IChannel boundChannel;
         public async Task RunServerAsync(TcpServerParams args)
         {
 
@@ -100,10 +99,10 @@ namespace NettyServer
                         pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                         pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
 
-                        pipeline.AddLast("echo", new ServerHandler());
+                        pipeline.AddLast("NettyServer", new ServerHandler());
                     }));
 
-                boundChannel = await bootstrap.BindAsync(args.ServerIP, args.ServerPort);
+                IChannel boundChannel = await bootstrap.BindAsync(args.ServerPort);
 
                 ClosingArrivedEvent.Reset();
 

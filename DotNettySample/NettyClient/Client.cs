@@ -29,6 +29,8 @@ namespace NettyClient
         }
         #endregion
 
+        private ManualResetEvent ClosingArrivedEvent = new ManualResetEvent(false);
+
         public void Send()
         {
             try
@@ -37,7 +39,7 @@ namespace NettyClient
                 if (string.IsNullOrEmpty(Command)) return;
 
                 IPAddress ServerIP = IPAddress.Parse("127.0.0.1"); // 服务器地址
-                int ServerPort = 8888; // 服务器端口
+                int ServerPort = 8007; // 服务器端口
                 int ConnectTimeout = 10000; // 连接等待时间
                 int ReplyTimeout = 10000;   // 回复等待时间
 
@@ -80,8 +82,8 @@ namespace NettyClient
                     .Group(group)
                     .Channel<TcpSocketChannel>()
                     .Option(ChannelOption.TcpNodelay, true)
-                    .Option(ChannelOption.ConnectTimeout, new TimeSpan(0, 0, 0, 0, args.ConnectTimeout))
-                    
+                    //.Option(ChannelOption.ConnectTimeout, new TimeSpan(0, 0, 0, 0, args.ConnectTimeout))
+
                     .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                     {
                         IChannelPipeline pipeline = channel.Pipeline;
@@ -89,22 +91,19 @@ namespace NettyClient
                         pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                         pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
 
-                        pipeline.AddLast("echoClient", new ClientHandler());
+                        pipeline.AddLast("NettyClient", new ClientHandler());
                     }));
 
-                clientChannel =
-                    await bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
+                clientChannel = await bootstrap.ConnectAsync(new IPEndPoint(args.ServerIP, args.ServerPort));
 
-                IByteBuffer initialMessage = Unpooled.Buffer(256);
-                byte[] messageBytes = Encoding.UTF8.GetBytes("Hello world");
-                initialMessage.WriteBytes(messageBytes);
-                await clientChannel.WriteAndFlushAsync(initialMessage);
+                //// 等待回复
+                //if (!args.ReceiveCompletedEvent.WaitOne(args.ReplyTimeout, true))
+                //{
+                //    Console.WriteLine("Reply Timeout!");
+                //}
+                ClosingArrivedEvent.Reset();
 
-                // 等待回复
-                if (!args.ReceiveCompletedEvent.WaitOne(args.ReplyTimeout, true))
-                {
-                    Console.WriteLine("Reply Timeout!");
-                }
+                ClosingArrivedEvent.WaitOne();
 
                 await clientChannel.CloseAsync();
             }
