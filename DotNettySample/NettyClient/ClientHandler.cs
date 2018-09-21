@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DotNetty.Buffers;
+using DotNetty.Handlers.Timeout;
 
 namespace NettyClient
 {
@@ -22,13 +23,13 @@ namespace NettyClient
 
         public override void ChannelActive(IChannelHandlerContext context)
         {
-            Console.WriteLine(@"--- Client is active ---");
+            MainWindow.SetText(@"--- Client is active ---");
             context.WriteAndFlushAsync(this.initialMessage);
         }
 
         public override void ChannelInactive(IChannelHandlerContext context)
         {
-            Console.WriteLine(@"--- Client is inactive ---");
+            MainWindow.SetText(@"--- Client is inactive ---");
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object msg)
@@ -36,7 +37,7 @@ namespace NettyClient
             var byteBuffer = msg as IByteBuffer;
             if (byteBuffer != null)
             {
-                Console.WriteLine("Received from server: " + byteBuffer.ToString(Encoding.UTF8));
+                MainWindow.SetText("Received from server: " + byteBuffer.ToString(Encoding.UTF8));
             }
             //context.WriteAsync(msg);
         }
@@ -46,11 +47,19 @@ namespace NettyClient
         public override void UserEventTriggered(IChannelHandlerContext context, object evt)
         {
             base.UserEventTriggered(context, evt);
+            if (evt is IdleStateEvent)
+            {
+                var e = evt as IdleStateEvent;
+                if (e.State == IdleState.ReaderIdle)
+                {
+                    //MainWindow.SetText("客户端读超时");
+                }
+            }
         }
 
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
-            Console.WriteLine("Client Exception: " + exception);
+            MainWindow.SetText("Client Exception: " + exception);
             context.CloseAsync();
         }
 

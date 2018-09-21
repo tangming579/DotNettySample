@@ -21,6 +21,7 @@ namespace NettyClient
     /// </summary>
     public partial class MainWindow : Window
     {
+        static MainWindow Current;
         public MainWindow()
         {
             InitializeComponent();
@@ -29,7 +30,8 @@ namespace NettyClient
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            Client.Instance.Send();
+            Current = this;
+            Client.Instance.Start();
         }
 
         private void btnSendClear_Click(object sender, RoutedEventArgs e)
@@ -49,6 +51,15 @@ namespace NettyClient
         private void btnRecClear_Click(object sender, RoutedEventArgs e)
         {
             txbReceive.Text = String.Empty;
+        }
+
+        public static void SetText(string msg)
+        {
+            if (Current == null) return;
+            Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                Current.txbReceive.AppendText(msg + '\n');
+            }));
         }
     }
 }

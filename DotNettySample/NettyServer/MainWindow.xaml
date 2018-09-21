@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NettyServer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="Server" Height="350" Width="525">
     <Grid>
         <TextBlock HorizontalAlignment="Left" Margin="28,42,0,0" TextWrapping="Wrap" Text="Send：" VerticalAlignment="Top"/>
         <TextBox x:Name="txbSend" HorizontalAlignment="Left" Height="96" Margin="28,62,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="368"/>

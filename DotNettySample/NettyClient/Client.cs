@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DotNetty.Buffers;
+using DotNetty.Handlers.Timeout;
 
 namespace NettyClient
 {
@@ -31,7 +32,7 @@ namespace NettyClient
 
         private ManualResetEvent ClosingArrivedEvent = new ManualResetEvent(false);
 
-        public void Send()
+        public void Start()
         {
             try
             {
@@ -43,32 +44,27 @@ namespace NettyClient
                 int ConnectTimeout = 10000; // 连接等待时间
                 int ReplyTimeout = 10000;   // 回复等待时间
 
-                // 线程池任务
-                ThreadPool.QueueUserWorkItem(ThreadPoolCallback,
-                    new TcpClientParams()
-                    {
-                        ServerIP = ServerIP,
-                        ServerPort = ServerPort,
-                        ConnectTimeout = ConnectTimeout,
-                        ReplyTimeout = ReplyTimeout,
-                        ReceiveCompletedEvent = new ManualResetEvent(false),
-                        Command = Command
-                    });
+
+                var param = new ClientParams()
+                {
+                    ServerIP = ServerIP,
+                    ServerPort = ServerPort,
+                    ConnectTimeout = ConnectTimeout,
+                    ReplyTimeout = ReplyTimeout,
+                    ReceiveCompletedEvent = new ManualResetEvent(false),
+                    Command = Command
+                };
+                Task.Run(() => RunClientAsync(param));
             }
             catch (Exception exception)
             {
 
             }
-        }
 
-        private void ThreadPoolCallback(object state)
-        {
-            TcpClientParams Args = state as TcpClientParams;
-            RunClientAsync(Args).Wait();
         }
 
         public IChannel clientChannel;
-        public async Task RunClientAsync(TcpClientParams args)
+        public async Task RunClientAsync(ClientParams args)
         {
 
             var group = new MultithreadEventLoopGroup();
@@ -90,7 +86,7 @@ namespace NettyClient
 
                         pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                         pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-
+                        pipeline.AddLast("idleStateHandle", new IdleStateHandler(10, 0, 0));
                         pipeline.AddLast("NettyClient", new ClientHandler());
                     }));
 
@@ -109,50 +105,65 @@ namespace NettyClient
             }
             catch (Exception exp)
             {
-                Console.WriteLine($"Client Exception：{exp.Message}");
+                MainWindow.SetText($"Client Exception：{exp.Message}");
             }
             finally
             {
-                await group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
+                //await group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
+                ReConnectServer();
+            }
+
+        }
+        //断线重连
+        private void ReConnectServer()
+        {
+            try
+            {
+                Thread.Sleep(5000);
+                MainWindow.SetText("客户端进行断线重连");
+                Start();
+            }
+            catch (Exception e)
+            {
+
             }
         }
+    }
+    public class ClientParams
+    {
+        /// <summary>
+        /// 接收服务器地址
+        /// </summary>
+        public IPAddress ServerIP;
 
-        public class TcpClientParams
-        {
-            /// <summary>
-            /// 接收服务器地址
-            /// </summary>
-            public IPAddress ServerIP;
+        /// <summary>
+        /// 接收服务器端口
+        /// </summary>
+        public int ServerPort;
 
-            /// <summary>
-            /// 接收服务器端口
-            /// </summary>
-            public int ServerPort;
+        /// <summary>
+        /// 通信密钥
+        /// </summary>
+        public string SecretKey;
 
-            /// <summary>
-            /// 通信密钥
-            /// </summary>
-            public string SecretKey;
+        /// <summary>
+        /// 连接超时等待时间
+        /// </summary>
+        public int ConnectTimeout;
 
-            /// <summary>
-            /// 连接超时等待时间
-            /// </summary>
-            public int ConnectTimeout;
+        /// <summary>
+        /// 回复等待时间（毫秒）
+        /// </summary>
+        public int ReplyTimeout = -1;
 
-            /// <summary>
-            /// 回复等待时间（毫秒）
-            /// </summary>
-            public int ReplyTimeout = -1;
+        /// <summary>
+        /// 回复数据接收完成事件
+        /// </summary>
+        public ManualResetEvent ReceiveCompletedEvent;
 
-            /// <summary>
-            /// 回复数据接收完成事件
-            /// </summary>
-            public ManualResetEvent ReceiveCompletedEvent;
-
-            /// <summary>
-            /// 命令字符串
-            /// </summary>
-            public string Command;
-        }
+        /// <summary>
+        /// 命令字符串
+        /// </summary>
+        public string Command;
     }
 }

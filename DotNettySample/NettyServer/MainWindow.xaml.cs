@@ -21,6 +21,7 @@ namespace NettyServer
     /// </summary>
     public partial class MainWindow : Window
     {
+        static MainWindow Current;
         public MainWindow()
         {
             InitializeComponent();
@@ -29,6 +30,7 @@ namespace NettyServer
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            Current = this;
             //Task.Run(() => Server.Instance.Start());
             Server.Instance.Start();
         }
@@ -40,7 +42,6 @@ namespace NettyServer
 
         private void btnSend_Click(object sender, RoutedEventArgs e)
         {
-            if (!Server.Instance.boundChannel.Active || !Server.Instance.boundChannel.IsWritable) return;
             if (ServerHandler.Current == null || ServerHandler.Current.Removed) return;
             IByteBuffer initialMessage = Unpooled.Buffer(256);
             byte[] messageBytes = Encoding.UTF8.GetBytes(txbSend.Text);
@@ -51,6 +52,15 @@ namespace NettyServer
         private void btnRecClear_Click(object sender, RoutedEventArgs e)
         {
             txbReceive.Text=String.Empty;
+        }
+
+        public static void SetText(string msg)
+        {
+            if (Current == null) return;
+            Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                Current.txbReceive.AppendText(msg + '\n');
+            }));
         }
     }
 }

@@ -7,21 +7,26 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using DotNetty.Buffers;
+using DotNetty.Handlers.Timeout;
 
 namespace NettyServer
 {
     public class ServerHandler : FlowControlHandler
     {
+        //客户端超时次数
+        private const int MAX_OVERTIME = 3;  //超时次数超过该值则注销连接
+
+
         public static IChannelHandlerContext Current;
         public override void ChannelActive(IChannelHandlerContext context)
         {
-            Console.WriteLine(@"--- Server is active ---");
+            MainWindow.SetText(@"--- Server is active ---");
             Current = context;
         }
 
         public override void ChannelInactive(IChannelHandlerContext context)
         {
-            Console.WriteLine($"--- {context.Name} is inactive ---");
+            MainWindow.SetText($"--- {context.Name} is inactive ---");
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object msg)
@@ -29,9 +34,8 @@ namespace NettyServer
             var buffer = msg as IByteBuffer;
             if (buffer != null)
             {
-                Console.WriteLine(@"Received from client: " + buffer.ToString(Encoding.UTF8));
+                MainWindow.SetText(@"Received from client: " + buffer.ToString(Encoding.UTF8));
             }
-            //context.WriteAsync(msg);
         }
 
         public override void ChannelReadComplete(IChannelHandlerContext context) => context.Flush();
@@ -43,7 +47,7 @@ namespace NettyServer
 
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
-            Console.WriteLine("Server Exception: " + exception);
+            MainWindow.SetText("Server Exception: " + exception);
             //context.CloseAsync();
         }
 
@@ -51,7 +55,6 @@ namespace NettyServer
         private void handleHeartbreat(IChannelHandlerContext context, Socket packet)
         {
             // 将心跳丢失计数器置为0
-
         }
 
         //处理数据包
