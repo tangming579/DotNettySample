@@ -8,7 +8,7 @@ DotNetty的GitHub地址：https://github.com/azure/dotnetty
 
 - 心跳检测
 - 断线重连
-- Protoco Buffer序列化
+- Protocol Buffers序列化
 
 **引用类库：**
 
@@ -17,6 +17,24 @@ DotNetty的GitHub地址：https://github.com/azure/dotnetty
 - DotNetty.Common：公共的类库项目，包装线程池，并行任务和常用帮助类的封装
 - DotNetty.Handlers：封装了常用的管道处理器，比如tls编解码，超时机制，心跳检查，日志等
 - DotNetty.Transport：DotNetty核心的实现
-- protobuf-net：ProtoBuf .Net操作类库
+- protobuf-net：Protocol Buffers .Net操作类库
 
-更高级的应用请参考《Netty权威指南》，或者使用另一个比较好用的.Net通讯框架SuperSocket
+**粘包/拆包**
+
+一般所谓的TCP粘包是在一次接收数据不能完全地体现一个完整的消息数据。TCP通讯为何存在粘包呢？主要原因是TCP是以流的方式来处理数据，再加上网络上MTU的往往小于在应用处理的消息数据，所以就会引发一次接收的数据无法满足消息的需要，导致粘包的存在。处理粘包的唯一方法就是制定应用层的数据通讯协议，通过协议来规范现有接收的数据是否满足消息数据的需要。
+
+解决办法：
+
+          1. 消息定长：报文大小固定长度，不够空格补全，发送和接收方遵循相同的约定，这样即使粘包了通过接收方编程实现获取定长报文也能区分。
+          2. 包尾添加特殊分隔符：例如每条报文结束都添加回车换行符（例如FTP协议）或者指定特殊字符作为报文分隔符，接收方通过特殊分隔符切分报文区分。
+          3. 将消息分为消息头和消息体：消息头中包含表示信息的总长度（或者消息体长度）的字段
+
+**Protocol Buffers**
+
+protocol buffer是google 的一种数据交换的格式，它独立于语言，独立于平台。它是一种类似于xml、json等类似作用的交互格式。由于它是一种二进制的格式，比使用 xml 进行数据交换快许多。
+
+**另外**
+
+更高级的应用请参考《Netty权威指南》
+
+另外SuperSocket是另一个比较好用的.Net通讯框架，也很推荐
