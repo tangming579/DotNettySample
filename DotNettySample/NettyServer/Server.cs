@@ -51,7 +51,7 @@ namespace NettyServer
                     int ServerPort = 8007; // 服务器端口
                     int Backlog = 100; // 最大连接等待数
 
-                    // 线程池任务
+                    //线程池任务
                     ThreadPool.QueueUserWorkItem(ThreadPoolCallback,
                         new TcpServerParams()
                         {
