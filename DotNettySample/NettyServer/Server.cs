@@ -1,5 +1,6 @@
 ﻿using DotNetty.Codecs;
 using DotNetty.Handlers.Logging;
+using DotNetty.Handlers.Timeout;
 using DotNetty.Handlers.Tls;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
@@ -31,12 +32,13 @@ namespace NettyServer
         /// 服务器是否已运行
         /// </summary>
         private bool IsServerRunning = false;
-
         /// <summary>
         /// 关闭侦听器事件
         /// </summary>
         private ManualResetEvent ClosingArrivedEvent = new ManualResetEvent(false);
-
+        /// <summary>
+        /// 启动服务
+        /// </summary>
         public void Start()
         {
             try
@@ -61,7 +63,7 @@ namespace NettyServer
                         });
                 }
             }
-            catch (Exception exception)
+            catch (Exception exp)
             {
 
             }
@@ -85,18 +87,25 @@ namespace NettyServer
             try
             {
                 var bootstrap = new ServerBootstrap();
-                bootstrap.Group(bossGroup, workerGroup);
-
-                bootstrap.Channel<TcpServerSocketChannel>();
-
-                bootstrap
-                    .Option(ChannelOption.SoBacklog, args.Backlog)
-                    .Handler(new LoggingHandler("SRV-LSTN"))
+                    bootstrap
+                    .Group(bossGroup, workerGroup)
+                    .Channel<TcpServerSocketChannel>()
+                    .Option(ChannelOption.SoBacklog, args.Backlog) //设置网络IO参数等
+                    .Option(ChannelOption.SoKeepalive, true)//保持连接
+                    .Handler(new LoggingHandler("SRV-LSTN"))//在主线程组上设置一个打印日志的处理器
                     .ChildHandler(new ActionChannelInitializer<IChannel>(channel =>
                     {
+                        //工作线程连接器 是设置了一个管道，服务端主线程所有接收到的信息都会通过这个管道一层层往下传输
+                        //同时所有出栈的消息 也要这个管道的所有处理器进行一步步处理
                         IChannelPipeline pipeline = channel.Pipeline;
 
+                        //IdleStateHandler 心跳
+                        pipeline.AddLast(new IdleStateHandler(150, 0, 0));//第一个参数为读，第二个为写，第三个为读写全部
+
+                        //出栈消息，通过这个handler 在消息顶部加上消息的长度
                         pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
+
+                        //入栈消息通过该Handler,解析消息的包长信息，并将正确的消息体发送给下一个处理Handler
                         pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
 
                         pipeline.AddLast("NettyServer", new ServerHandler());
@@ -104,10 +113,11 @@ namespace NettyServer
 
                 IChannel boundChannel = await bootstrap.BindAsync(args.ServerPort);
 
+                //运行至此处，服务启动成功
+                IsServerRunning = true;
+
                 ClosingArrivedEvent.Reset();
-
                 ClosingArrivedEvent.WaitOne();
-
                 await boundChannel.CloseAsync();
             }
             finally

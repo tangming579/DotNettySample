@@ -30,6 +30,7 @@ namespace NettyClient
         public override void ChannelInactive(IChannelHandlerContext context)
         {
             MainWindow.SetText(@"--- Client is inactive ---");
+            
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object msg)
