@@ -66,11 +66,10 @@ namespace NettyClient
         public IChannel clientChannel;
         public async Task RunClientAsync(ClientParams args)
         {
-
             var group = new MultithreadEventLoopGroup();
-
             X509Certificate2 cert = null;
             string targetHost = null;
+
             try
             {
                 var bootstrap = new Bootstrap();
@@ -84,19 +83,21 @@ namespace NettyClient
                     {
                         IChannelPipeline pipeline = channel.Pipeline;
 
+                        //出栈消息，通过这个handler 在消息顶部加上消息的长度
                         pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
+
+                        //入栈消息,通过该Handler,解析消息的包长信息，并将正确的消息体发送给下一个处理Handler
                         pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
+
+                        //心跳检测每10秒进行一次读检测，如果10秒内ChannelRead()方法未被调用则触发一次userEventTrigger()方法.
                         pipeline.AddLast("idleStateHandle", new IdleStateHandler(10, 0, 0));
+
+                        //定义Handler类及名称
                         pipeline.AddLast("NettyClient", new ClientHandler());
                     }));
 
                 clientChannel = await bootstrap.ConnectAsync(new IPEndPoint(args.ServerIP, args.ServerPort));
 
-                //// 等待回复
-                //if (!args.ReceiveCompletedEvent.WaitOne(args.ReplyTimeout, true))
-                //{
-                //    Console.WriteLine("Reply Timeout!");
-                //}
                 ClosingArrivedEvent.Reset();
 
                 ClosingArrivedEvent.WaitOne();
@@ -105,7 +106,7 @@ namespace NettyClient
             }
             catch (Exception exp)
             {
-                MainWindow.SetText($"Client Exception：{exp.Message}");
+                MainWindow.SetText("Client connection failed");
             }
             finally
             {
