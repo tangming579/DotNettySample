@@ -35,6 +35,6 @@ protocol buffer是google 的一种数据交换的格式，它独立于语言，�
 
 **另外**
 
-更高级的应用请参考《Netty权威指南》
+更高级的应用请参考《Netty实战》
 
 另外SuperSocket是另一个比较好用的.Net通讯框架，也很推荐
