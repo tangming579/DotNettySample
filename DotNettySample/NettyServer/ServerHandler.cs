@@ -38,6 +38,9 @@ namespace NettyServer
             if (buffer != null)
             {
                 MainWindow.SetText(@"Received from client: " + buffer.ToString(Encoding.UTF8));
+
+                //判断是否是心跳，服务端收到客户端发送的心跳消息后，回复一条信息
+                //context.WriteAndFlushAsync("回复帧");
             }
         }
 

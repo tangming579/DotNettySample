@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DotNetty.Buffers;
 using DotNetty.Handlers.Timeout;
+using System.Net;
 
 namespace NettyClient
 {
@@ -29,8 +30,16 @@ namespace NettyClient
 
         public override void ChannelInactive(IChannelHandlerContext context)
         {
+            //掉线了
             MainWindow.SetText(@"--- Client is inactive ---");
-            
+            //断线重连
+            var eventLoop = context.Channel.EventLoop;
+            eventLoop.ScheduleAsync(new Action(() =>
+            {
+                context.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8007));
+            })
+            , TimeSpan.FromSeconds(1));
+            base.ChannelInactive(context);
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object msg)
@@ -51,9 +60,26 @@ namespace NettyClient
             if (evt is IdleStateEvent)
             {
                 var e = evt as IdleStateEvent;
-                if (e.State == IdleState.ReaderIdle)
+                switch (e.State)
                 {
-                    //MainWindow.SetText("客户端读超时");
+                    //长期没收到服务器推送数据
+                    case IdleState.ReaderIdle:
+                        {
+                            //可以重新连接
+                        }
+                        break;
+                    //长期未向服务器发送数据
+                    case IdleState.WriterIdle:
+                        {
+                            //发送心跳包
+                        }
+                        break;
+                    //All
+                    case IdleState.AllIdle:
+                        {
+
+                        }
+                        break;
                 }
             }
         }
@@ -67,7 +93,7 @@ namespace NettyClient
         //发送心跳包
         private void sendHeartbeatPacket(IChannelHandlerContext context)
         {
-            
+
         }
     }
 }

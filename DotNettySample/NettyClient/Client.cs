@@ -85,7 +85,6 @@ namespace NettyClient
 
                         //出栈消息，通过这个handler 在消息顶部加上消息的长度
                         pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
-
                         //入栈消息,通过该Handler,解析消息的包长信息，并将正确的消息体发送给下一个处理Handler
                         pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
 
