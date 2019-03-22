@@ -8,12 +8,14 @@ using System.Threading.Tasks;
 using DotNetty.Buffers;
 using DotNetty.Handlers.Timeout;
 using System.Net;
+using System.Timers;
 
 namespace NettyClient
 {
     public class ClientHandler : FlowControlHandler
     {
         readonly IByteBuffer initialMessage;
+        Timer timer;
 
         public ClientHandler()
         {
@@ -24,6 +26,7 @@ namespace NettyClient
 
         public override void ChannelActive(IChannelHandlerContext context)
         {
+            timer = null;
             MainWindow.SetText(@"--- Client is active ---");
             context.WriteAndFlushAsync(this.initialMessage);
         }
@@ -32,13 +35,17 @@ namespace NettyClient
         {
             //掉线了
             MainWindow.SetText(@"--- Client is inactive ---");
-            //断线重连
-            var eventLoop = context.Channel.EventLoop;
-            eventLoop.ScheduleAsync(new Action(() =>
+            //断线重连           
+            timer = new System.Timers.Timer(4000);
+            timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
             {
-                context.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8007));
-            })
-            , TimeSpan.FromSeconds(1));
+                if (!context.Channel.Active)
+                {
+                   context.Channel.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8007));
+                }
+            });
+            timer.Enabled = true;
+            timer.Start();
             base.ChannelInactive(context);
         }
 
@@ -66,12 +73,16 @@ namespace NettyClient
                     case IdleState.ReaderIdle:
                         {
                             //可以重新连接
+                            if (!context.Channel.Active)
+                                context.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8007));
                         }
                         break;
                     //长期未向服务器发送数据
                     case IdleState.WriterIdle:
                         {
                             //发送心跳包
+                            byte[] messageBytes = Encoding.UTF8.GetBytes("heartbeat");
+                            context.WriteAndFlushAsync(messageBytes);
                         }
                         break;
                     //All

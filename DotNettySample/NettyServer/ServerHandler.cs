@@ -37,10 +37,15 @@ namespace NettyServer
             var buffer = msg as IByteBuffer;
             if (buffer != null)
             {
-                MainWindow.SetText(@"Received from client: " + buffer.ToString(Encoding.UTF8));
-
-                //判断是否是心跳，服务端收到客户端发送的心跳消息后，回复一条信息
-                //context.WriteAndFlushAsync("回复帧");
+                var message = buffer.ToString(Encoding.UTF8);
+                if (!string.Equals("heartbeat", message))
+                    MainWindow.SetText(@"Received from client: " + message);
+                //服务端收到客户端发送的心跳消息后，回复一条信息
+                else
+                {
+                    byte[] messageBytes = Encoding.UTF8.GetBytes("reply");
+                    context.WriteAndFlushAsync(messageBytes);
+                }
             }
         }
 
@@ -68,6 +73,6 @@ namespace NettyServer
         {
             Console.WriteLine($"Client {context} is Disconnected.");
             base.HandlerRemoved(context);
-        }        
+        }
     }
 }
